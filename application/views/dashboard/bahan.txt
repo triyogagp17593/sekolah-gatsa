@@ -1,0 +1,77 @@
+<?php if($jmldata_kelas == 0){echo "<h3>Tidak Ada Mata Pelajaran Yang Di Ambil</h3>";}else{ ?>
+                <?php
+                  date_default_timezone_set('Asia/Jakarta');
+                  $hari = array ( 1 => 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu');
+                  $DAY_NOW=$hari[date("N")];
+                  $data_mapel = $this->main_model->get_all_sk_mengajarBy2($data_kelas[0]['id_kelas'])->result(); 
+                  foreach ($data_mapel as $hasil) {
+                    $data_jadwal = $this->main_model->get_all_jadwalBy($hasil->id_mapel)->result_array();
+                    $jml_lihat_nilai = $this->main_model->lihat_nilai($hasil->id_mapel,$data_kelas[0]['id_kelas'],$hasil->id_login,$this->session->userdata('ses_idlogin'))->num_rows();
+                ?>
+                <?php if($jml_lihat_nilai > 0){?>
+                  <a href="<?=base_url('lihat_nilai/').$hasil->id_mapel.'/'.$data_kelas[0]['id_kelas'].'/'.$hasil->id_login.'/'.$this->session->userdata('ses_idlogin');?>" title="Melihat Hasil Ujian Mata Pelajaran <?=$hasil->nama_mapel?> Kelas <?= $data_kelas[0]['romawi_kelas']."-".$data_kelas[0]['angka_kelas']?>" id="lihatnilai" data-toggle="modal" data-target="#modal_detail_nilai">
+                <?php }else{ ?>
+                  <a href="<?=base_url('no_nilai')?>" title="Tidak ada hasil ujian">
+                <?php } ?>
+                    <div class="animated flipInY col-lg-4 col-md-6 col-sm-6 col-xs-12">
+                      <div class="tile-stats">
+                        <div class="icon"><i class="fa fa-file-text"></i>
+                        </div>
+                        <div class="count">&nbsp;</div>
+                        <h4 style="color: black;margin-left: 5px;font-weight: bold;"><?=$hasil->nama_mapel?></h4>
+                        <?php if($this->main_model->get_all_jadwalBy($hasil->id_mapel)->num_rows() == 1){ ?>
+                          <?php 
+                            date_default_timezone_set('Asia/Jakarta');
+                            $selesai=$data_jadwal[0]['waktu_mulai'];
+                            $mulai=date("Y-m-d H:i:s");
+                            $akhir=date("Y-m-d H:i:s");
+                            $saatini=date("Y-m-d H:i:s");
+                            $mulai_time=(is_string($mulai)?strtotime($mulai):$mulai);
+                            $selesai_time=(is_string($selesai)?strtotime($selesai):$selesai);
+                            $detik_itung=$selesai_time-$mulai_time;
+                            $menit_itung=floor($detik_itung/60)+1;
+                            $sisa_detik=$detik_itung%$menit_itung;
+                            if($menit_itung < 60){ 
+                              $menit = $menit_itung; 
+                              $jam = 0; 
+                            }else{ 
+                              $menit = $menit_itung%60;
+                              $jam = (int)($menit_itung/60); 
+                            }
+                          ?>
+                          <?php if($DAY_NOW == $data_jadwal[0]['hari']){ ?>
+                            <?php if($akhir < $data_jadwal[0]['waktu_selesai']){ ?>
+                              <?php if($jml_lihat_nilai <= 0){ ?>
+                                <p style="font-size: 15px;color: black;font-weight: bold;text-align: center;"><span class="fa fa-check"></span> <u>Ujian Tersedia <span class="fa fa-check"></span></u></p>
+                              <?php } ?>  
+                              <?php if($menit_itung > 0 && $menit_itung <= 10){ ?>
+                                <div id="timer"></div>
+                                <a href="<?=base_url('peraturan/').$hasil->id_mapel.'/'.$data_kelas[0]['id_kelas'].'/'.$hasil->id_login.'/'.$this->session->userdata('ses_idlogin');?>" style="margin-left: 5px;font-weight: bold;display: none;" id="tombol_ujian" class="btn btn-primary btn-xs"><span class="fa fa-check"></span> Mulai Ujian</a>
+                                <form action="<?= base_url('dashboard');?>" id="frmSoal"></form>
+                              <?php }else if($menit_itung <= 0){ ?>
+                                <?php if($saatini > $data_jadwal[0]['waktu_mulai'] && $saatini < $data_jadwal[0]['waktu_selesai']){ ?>
+                                  <?php if($jml_lihat_nilai == 1){$block="none";}else{$block="block";} ?>
+                                  <a href="<?=base_url('peraturan/').$hasil->id_mapel.'/'.$data_kelas[0]['id_kelas'].'/'.$hasil->id_login.'/'.$this->session->userdata('ses_idlogin');?>" style="margin-left: 5px;font-weight: bold;display: <?= $block?>;" id="tombol_ujian" class="btn btn-primary btn-xs"><span class="fa fa-file-text"></span> Mulai Ujian <span class="fa fa-file-text"></span></a>
+                                <?php } ?>
+                                <?php if($jml_lihat_nilai > 0){ ?>
+                                  <p style="font-size: 15px;color: black;font-weight: bold;text-align: center;"><span class="fa fa-check"></span> <u>Ujian Telah Selesai</u> <span class="fa fa-check"></span></p>
+                                  <a href="#" style="margin-left: 5px;font-weight: bold;display: block;" id="selesai_ujian" class="btn btn-success btn-xs"><span class="fa fa-check"></span> Selesai Mengerjakan Ujian <span class="fa fa-check"></span></a>
+                                <?php } ?>
+                              <?php } ?>
+                            <?php }else{ ?>
+                              <?php if($jml_lihat_nilai > 0){ ?>
+                                <p style="font-size: 15px;color: black;font-weight: bold;text-align: center;"><span class="fa fa-check"></span> <u>Ujian Telah Selesai</u> <span class="fa fa-check"></span></p>
+                                <a href="#" style="margin-left: 5px;font-weight: bold;display: block;" id="selesai_ujian" class="btn btn-success btn-xs"><span class="fa fa-check"></span> Selesai Mengerjakan Ujian <span class="fa fa-check"></span></a>
+                              <?php }else{ ?>
+                                <p style="font-size: 15px;color: black;font-weight: bold;text-align: center;"><span class="fa fa-check"></span> <u>Ujian Telah Selesai</u> <span class="fa fa-check"></span></p>
+                                <a href="#" style="margin-left: 5px;font-weight: bold;display: block;" id="tombol_ujian" class="btn btn-danger btn-xs"><span class="fa fa-remove"></span> Anda Tidak Mengerjakan Ujian <span class="fa fa-remove"></span></a>
+                              <?php } ?>  
+                            <?php } ?>
+                          <?php } ?>
+                        <?php }else{ ?>
+                          <p style="font-size: 15px;color: black;font-weight: bold;text-align: center;"><span class="fa fa-remove"></span> <u>Ujian Belum Tersedia</u> <span class="fa fa-remove"></span></p>
+                        <?php } ?>
+                      </div>
+                    </div>
+                  </a>
+              <?php } } ?>
